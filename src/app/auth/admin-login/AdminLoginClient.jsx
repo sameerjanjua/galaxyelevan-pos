@@ -54,25 +54,26 @@ export default function AdminLoginClient() {
       }
 
       if (!isAlreadyOnAdmin) {
-        let baseDomain = currentHost;
+        let baseDomain;
+        const parts = currentHost.split(".");
+        
         if (isLvhMe) {
-          const parts = currentHost.split(".");
-          if (parts.length > 2) {
+          // For lvh.me, base domain is the last 2 parts (e.g., lvh.me)
+          baseDomain = parts.slice(-2).join(".");
+        } else if (isLocalhost) {
+          // For localhost, it's just localhost
+          baseDomain = "localhost";
+        } else {
+          // For production, strip 'www' if it exists, and take the last 2 parts
+          if (parts[0] === "www") {
             baseDomain = parts.slice(1).join(".");
-          }
-        } else if (!isLocalhost) {
-          // Production domain handling
-          const parts = currentHost.split(".");
-          if (parts.length > 2 && parts[0] !== "admin") {
-            // Already on a subdomain, but not admin, so just prepend admin
-            baseDomain = currentHost;
-          } else if (parts.length === 2) {
-            // Root domain, so just use it
-            baseDomain = currentHost;
+          } else {
+            baseDomain = parts.slice(-2).join(".");
           }
         }
-
-        window.location.href = `${protocol}//admin.${baseDomain}${redirect}`;
+        
+        const port = window.location.port ? `:${window.location.port}` : "";
+        window.location.href = `${protocol}//admin.${baseDomain}${port}${redirect}`;
       } else {
         router.push(redirect);
       }
