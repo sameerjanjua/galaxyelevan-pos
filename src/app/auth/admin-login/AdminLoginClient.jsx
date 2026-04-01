@@ -55,11 +55,20 @@ export default function AdminLoginClient() {
 
       if (!isAlreadyOnAdmin) {
         let baseDomain = currentHost;
-        // Normalize base domain for lvh.me if needed
         if (isLvhMe) {
           const parts = currentHost.split(".");
           if (parts.length > 2) {
             baseDomain = parts.slice(1).join(".");
+          }
+        } else if (!isLocalhost) {
+          // Production domain handling
+          const parts = currentHost.split(".");
+          if (parts.length > 2 && parts[0] !== "admin") {
+            // Already on a subdomain, but not admin, so just prepend admin
+            baseDomain = currentHost;
+          } else if (parts.length === 2) {
+            // Root domain, so just use it
+            baseDomain = currentHost;
           }
         }
 
