@@ -1,33 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 export default function ProductsManagement() {
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [locations, setLocations] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const lastFetchedPageRef = useRef(null);
 
   useEffect(() => {
-    fetchData();
+    if (lastFetchedPageRef.current === page) {
+      return;
+    }
+
+    lastFetchedPageRef.current = page;
+    fetchData(page);
   }, [page]);
 
   useEffect(() => {
     filterProducts();
   }, [products, search, lowStockOnly]);
 
-  const fetchData = async () => {
+  const fetchData = async (pageNumber) => {
     try {
       const [productsRes, suppliersRes, locationsRes] = await Promise.all([
-        fetch(`/api/products?page=${page}&limit=50`),
+        fetch(`/api/products?page=${pageNumber}&limit=50`),
         fetch("/api/inventory/suppliers?limit=100"),
-        fetch("/api/locations"),
       ]);
 
       if (productsRes.ok) {
@@ -38,10 +42,6 @@ export default function ProductsManagement() {
       if (suppliersRes.ok) {
         const data = await suppliersRes.json();
         setSuppliers(data.suppliers);
-      }
-      if (locationsRes.ok) {
-        const data = await locationsRes.json();
-        setLocations(data.locations || []);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -144,7 +144,6 @@ export default function ProductsManagement() {
               setSearch("");
               setLowStockOnly(false);
               setPage(1);
-              fetchData();
             }}
             className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm"
           >

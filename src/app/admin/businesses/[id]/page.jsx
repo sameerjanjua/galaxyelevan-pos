@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -17,6 +17,7 @@ export default function BusinessDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const hasFetchedRef = useRef(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +25,12 @@ export default function BusinessDetailPage() {
   });
 
   useEffect(() => {
+    if (hasFetchedRef.current) {
+      return;
+    }
+
+    hasFetchedRef.current = true;
+
     const fetchBusiness = async () => {
       try {
         const res = await fetch(`/api/admin/businesses/${businessId}`);

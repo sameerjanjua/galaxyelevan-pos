@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const INITIAL_FETCH_DEDUPE_MS = 1200;
+let lastInitialFetchAt = 0;
+
 export default function StockMovements() {
   const [movements, setMovements] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -12,6 +15,15 @@ export default function StockMovements() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    // Deduplicate only rapid duplicate initial fetches from Strict Mode remounts.
+    if (type === "ALL" && page === 1) {
+      const now = Date.now();
+      if (now - lastInitialFetchAt < INITIAL_FETCH_DEDUPE_MS) {
+        return;
+      }
+      lastInitialFetchAt = now;
+    }
+
     fetchMovements();
   }, [type, page]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLocations } from "@/store/location/locationThunks";
 import { setError as setLocationError } from "@/store/location/locationSlice";
@@ -17,6 +17,7 @@ export default function LocationsAdminPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const hasFetchedInitiallyRef = useRef(false);
 
   const user = useSelector((state) => state.auth.user);
   const router = useRouter();
@@ -29,10 +30,16 @@ export default function LocationsAdminPage() {
   }, [user, isOwner, router]);
 
   useEffect(() => {
-    if (isOwner) {
+    if (!isOwner || hasFetchedInitiallyRef.current) {
+      return;
+    }
+
+    hasFetchedInitiallyRef.current = true;
+
+    if (locations.length === 0) {
       dispatch(fetchLocations());
     }
-  }, [dispatch, isOwner]);
+  }, [dispatch, isOwner, locations.length]);
 
   if (!isOwner) return null; // Early return for non-owners while redirecting
 

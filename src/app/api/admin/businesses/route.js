@@ -44,35 +44,38 @@ export async function GET(request) {
         });
 
         // Calculate revenue for each tenant
-        const tenantsWithStats = await Promise.all(
-            tenants.map(async (tenant) => {
-                const salesData = await prisma.sale.aggregate({
-                    where: { tenantId: tenant.id },
-                    _sum: { total: true, subtotal: true },
-                });
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-                const monthlyRevenue = await prisma.sale.aggregate({
-                    where: {
-                        tenantId: tenant.id,
-                        createdAt: {
-                            gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-                        },
-                    },
-                    _sum: { total: true },
-                });
+        const tenantsWithStats = [];
 
-                return {
-                    ...tenant,
-                    stats: {
-                        totalRevenue: salesData._sum.total || 0,
-                        monthlyRevenue: monthlyRevenue._sum.total || 0,
-                        userCount: tenant._count.users,
-                        productCount: tenant._count.products,
-                        salesCount: tenant._count.sales,
+        for (const tenant of tenants) {
+            const salesData = await prisma.sale.aggregate({
+                where: { tenantId: tenant.id },
+                _sum: { total: true, subtotal: true },
+            });
+
+            const monthlyRevenue = await prisma.sale.aggregate({
+                where: {
+                    tenantId: tenant.id,
+                    createdAt: {
+                        gte: thirtyDaysAgo,
                     },
-                };
-            })
-        );
+                },
+                _sum: { total: true },
+            });
+
+            tenantsWithStats.push({
+                ...tenant,
+                stats: {
+                    totalRevenue: salesData._sum.total || 0,
+                    monthlyRevenue: monthlyRevenue._sum.total || 0,
+                    userCount: tenant._count.users,
+                    productCount: tenant._count.products,
+                    salesCount: tenant._count.sales,
+                },
+            });
+        }
 
         return NextResponse.json(tenantsWithStats);
     } catch (error) {

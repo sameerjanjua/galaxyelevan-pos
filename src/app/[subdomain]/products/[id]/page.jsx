@@ -4,6 +4,44 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
+const productDetailCache = new Map();
+
+async function loadProductDetail(productId) {
+  if (productDetailCache.has(productId)) {
+    return productDetailCache.get(productId);
+  }
+
+  const request = (async () => {
+    const [productRes, suppliersRes, categoriesRes] = await Promise.all([
+      fetch(`/api/products/${productId}`),
+      fetch("/api/inventory/suppliers?limit=100"),
+      fetch("/api/categories?limit=200"),
+    ]);
+
+    const product = productRes.ok ? await productRes.json() : null;
+    const suppliers = suppliersRes.ok ? await suppliersRes.json() : null;
+    const categories = categoriesRes.ok ? await categoriesRes.json() : null;
+
+    return {
+      product: product?.product ?? null,
+      movements: product?.movements ?? [],
+      suppliers: suppliers?.suppliers ?? [],
+      categories: categories?.categories ?? [],
+    };
+  })();
+
+  productDetailCache.set(productId, request);
+
+  try {
+    const data = await request;
+    productDetailCache.set(productId, data);
+    return data;
+  } catch (error) {
+    productDetailCache.delete(productId);
+    throw error;
+  }
+}
+
 // ── Shared styles ─────────────────────────────────────────────────────────────
 const inp =
   "w-full bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm outline-none transition focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
@@ -41,46 +79,46 @@ export default function ProductDetail() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    let active = true;
+
+    const fetchData = async () => {
+      try {
+        const data = await loadProductDetail(productId);
+
+        if (!active) {
+          return;
+        }
+
+        if (data.product) {
+          setProduct(data.product);
+          setMovements(data.movements);
+          // Flatten metadata into formData for easy field binding
+          setFormData({
+            ...data.product,
+            brand: data.product.metadata?.brand ?? "",
+            model: data.product.metadata?.model ?? "",
+            imei: data.product.metadata?.imei ?? "",
+            color: data.product.metadata?.color ?? "",
+          });
+        }
+
+        setSuppliers(data.suppliers);
+        setCategories(data.categories);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchData();
+
+    return () => {
+      active = false;
+    };
   }, [productId]);
-
-  const fetchData = async () => {
-    try {
-      const [productRes, suppliersRes, categoriesRes] = await Promise.all([
-        fetch(`/api/products/${productId}`),
-        fetch("/api/inventory/suppliers?limit=100"),
-        fetch("/api/categories?limit=200"),
-      ]);
-
-      if (productRes.ok) {
-        const data = await productRes.json();
-        setProduct(data.product);
-        setMovements(data.movements);
-        // Flatten metadata into formData for easy field binding
-        setFormData({
-          ...data.product,
-          brand: data.product.metadata?.brand ?? "",
-          model: data.product.metadata?.model ?? "",
-          imei: data.product.metadata?.imei ?? "",
-          color: data.product.metadata?.color ?? "",
-        });
-      }
-
-      if (suppliersRes.ok) {
-        const data = await suppliersRes.json();
-        setSuppliers(data.suppliers ?? []);
-      }
-
-      if (categoriesRes.ok) {
-        const data = await categoriesRes.json();
-        setCategories(data.categories ?? []);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const set = (key) => (e) => {
     const val =

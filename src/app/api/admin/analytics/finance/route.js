@@ -19,20 +19,21 @@ export async function GET(request) {
             _count: true,
         });
 
-        const businessesRevenue = await Promise.all(
-            salesByBusiness.map(async (sale) => {
-                const tenant = await prisma.tenant.findUnique({
-                    where: { id: sale.tenantId },
-                    select: { name: true },
-                });
-                return {
-                    tenantId: sale.tenantId,
-                    tenantName: tenant?.name || "Unknown",
-                    revenue: sale._sum.total || 0,
-                    salesCount: sale._count,
-                };
+        const tenantIds = salesByBusiness.map((sale) => sale.tenantId);
+        const tenants = tenantIds.length > 0
+            ? await prisma.tenant.findMany({
+                where: { id: { in: tenantIds } },
+                select: { id: true, name: true },
             })
-        );
+            : [];
+        const tenantNameById = new Map(tenants.map((tenant) => [tenant.id, tenant.name]));
+
+        const businessesRevenue = salesByBusiness.map((sale) => ({
+            tenantId: sale.tenantId,
+            tenantName: tenantNameById.get(sale.tenantId) || "Unknown",
+            revenue: sale._sum.total || 0,
+            salesCount: sale._count,
+        }));
 
         // Payment methods breakdown
         const paymentBreakdown = await prisma.payment.groupBy({
@@ -41,20 +42,21 @@ export async function GET(request) {
             _count: true,
         });
 
-        const paymentMethods = await Promise.all(
-            paymentBreakdown.map(async (payment) => {
-                const paymentType = await prisma.paymentType.findUnique({
-                    where: { id: payment.paymentTypeId },
-                    select: { name: true },
-                });
-                return {
-                    paymentTypeId: payment.paymentTypeId,
-                    name: paymentType?.name || "Unknown",
-                    amount: payment._sum.amount || 0,
-                    count: payment._count,
-                };
+        const paymentTypeIds = paymentBreakdown.map((payment) => payment.paymentTypeId);
+        const paymentTypes = paymentTypeIds.length > 0
+            ? await prisma.paymentType.findMany({
+                where: { id: { in: paymentTypeIds } },
+                select: { id: true, name: true },
             })
-        );
+            : [];
+        const paymentTypeNameById = new Map(paymentTypes.map((paymentType) => [paymentType.id, paymentType.name]));
+
+        const paymentMethods = paymentBreakdown.map((payment) => ({
+            paymentTypeId: payment.paymentTypeId,
+            name: paymentTypeNameById.get(payment.paymentTypeId) || "Unknown",
+            amount: payment._sum.amount || 0,
+            count: payment._count,
+        }));
 
         // Monthly revenue trend
         const now = new Date();

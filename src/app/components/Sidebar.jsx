@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchLocations } from "@/store/location/locationThunks";
 import { setSelectedLocation } from "@/store/location/locationSlice";
 import { LocationSelector } from "./LocationSelector";
 
@@ -17,8 +16,6 @@ export function Sidebar() {
     (state) => state.location.selectedLocationId
   );
   const [collapsed, setCollapsed] = useState(false);
-
-  console.log(user);
 
 
   const navigationGroups = [
@@ -67,10 +64,6 @@ export function Sidebar() {
   const activeGroup = navigationGroups.findIndex((group) =>
     group.items.some((item) => isActive(item.href))
   );
-
-  useEffect(() => {
-    dispatch(fetchLocations());
-  }, [dispatch]);
 
   return (
     <aside

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 import { InventoryClient } from "./InventoryClient";
 
 export default function InventoryDashboard() {
@@ -9,23 +10,17 @@ export default function InventoryDashboard() {
   const [valuation, setValuation] = useState(null);
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tenantId, setTenantId] = useState(null);
+  const user = useSelector((state) => state.auth.user);
+  const tenantId = user?.tenantId ?? null;
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
+    if (hasFetchedRef.current) {
+      return;
+    }
+
+    hasFetchedRef.current = true;
     fetchData();
-    // Get tenant ID from session
-    const getTenantId = async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-          const user = await res.json();
-          setTenantId(user.tenantId);
-        }
-      } catch (error) {
-        console.error("Error fetching tenant ID:", error);
-      }
-    };
-    getTenantId();
   }, []);
 
   const fetchData = async () => {

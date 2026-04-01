@@ -1,27 +1,52 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import { setCredentials } from "@/store/auth/authSlice";
+import { setLocations } from "@/store/location/locationSlice";
 import { fetchCurrentUser } from "@/store/auth/authThunks";
+import { fetchLocations } from "@/store/location/locationThunks";
 import { Sidebar } from "./Sidebar";
 
-export function AppLayout({ children }) {
+export function AppLayout({ children, initialUser = null, initialLocations = null }) {
   const pathname = usePathname();
   const dispatch = useDispatch();
+  const hasInitializedRef = useRef(false);
 
   const [isAdminContext, setIsAdminContext] = useState(false);
 
   useEffect(() => {
+    if (hasInitializedRef.current) {
+      return;
+    }
+
+    hasInitializedRef.current = true;
+
     // Determine admin context on client side only to avoid hydration mismatch
     const isAdmin = window.location.hostname.startsWith("admin.");
     setIsAdminContext(isAdmin);
 
-    // Only fetch regular user info if NOT in admin context
+    // Hydrate from the server when available; otherwise fall back to client fetches.
     if (!isAdmin) {
-      dispatch(fetchCurrentUser());
+      if (initialUser) {
+        dispatch(setCredentials({ user: initialUser, token: null }));
+      } else {
+        dispatch(fetchCurrentUser());
+      }
+
+      if (Array.isArray(initialLocations)) {
+        dispatch(setLocations(initialLocations));
+
+        // If server hydration has no locations, fetch once from API on the client.
+        if (initialLocations.length === 0) {
+          dispatch(fetchLocations());
+        }
+      } else {
+        dispatch(fetchLocations());
+      }
     }
-  }, [dispatch]);
+  }, [dispatch, initialUser, initialLocations]);
 
   // Don't show regular business sidebar on login, register, admin pages, OR admin subdomain
   const shouldShowSidebar = !(
