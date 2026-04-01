@@ -55,8 +55,9 @@ export default function AdminLoginClient() {
 
       if (!isAlreadyOnAdmin) {
         let baseDomain;
-        const parts = currentHost.split(".");
-        
+        const hostname = window.location.hostname; // Use hostname to exclude port
+        const parts = hostname.split(".");
+
         if (isLvhMe) {
           // For lvh.me, base domain is the last 2 parts (e.g., lvh.me)
           baseDomain = parts.slice(-2).join(".");
@@ -68,10 +69,11 @@ export default function AdminLoginClient() {
           if (parts[0] === "www") {
             baseDomain = parts.slice(1).join(".");
           } else {
+            // This handles both root domain and other subdomains correctly
             baseDomain = parts.slice(-2).join(".");
           }
         }
-        
+
         const port = window.location.port ? `:${window.location.port}` : "";
         window.location.href = `${protocol}//admin.${baseDomain}${port}${redirect}`;
       } else {

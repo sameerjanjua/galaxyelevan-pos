@@ -46,7 +46,7 @@ export async function createSession(userId, tenantId, tenantSlug, tenantName) {
 
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_TTL_MS / 1000,
@@ -77,7 +77,7 @@ export async function clearSession() {
 
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
@@ -120,7 +120,7 @@ export async function createSuperAdminSession(superAdminId) {
   // This allows the session to be shared across subdomains
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: SESSION_TTL_MS / 1000,
@@ -152,7 +152,7 @@ export async function clearSuperAdminSession() {
 
   const cookieOptions = {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
