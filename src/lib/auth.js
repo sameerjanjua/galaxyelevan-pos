@@ -74,13 +74,35 @@ export async function createSession(userId, tenantId, tenantSlug, tenantName) {
 
 export async function clearSession() {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, "", {
+
+  const cookieOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
-  });
+  };
+
+  // Ensure domain is set for cross-subdomain cookie clearing
+  try {
+    const host = (await headers()).get("host") || "";
+    const hostname = host.split(":")[0];
+    if (hostname.endsWith("lvh.me")) {
+      cookieOptions.domain = ".lvh.me";
+    } else if (
+      process.env.NODE_ENV === "production" &&
+      !hostname.includes("localhost")
+    ) {
+      const parts = hostname.split(".");
+      if (parts.length >= 2) {
+        cookieOptions.domain = "." + parts.slice(-2).join(".");
+      }
+    }
+  } catch (e) {
+    // Headers not available
+  }
+
+  cookieStore.set(SESSION_COOKIE_NAME, "", cookieOptions);
 }
 
 // Super admin session functions
@@ -127,13 +149,35 @@ export async function createSuperAdminSession(superAdminId) {
 
 export async function clearSuperAdminSession() {
   const cookieStore = await cookies();
-  cookieStore.set(SUPER_ADMIN_SESSION_COOKIE_NAME, "", {
+
+  const cookieOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
-  });
+  };
+
+  // Ensure domain is set for cross-subdomain cookie clearing
+  try {
+    const host = (await headers()).get("host") || "";
+    const hostname = host.split(":")[0];
+    if (hostname.endsWith("lvh.me")) {
+      cookieOptions.domain = ".lvh.me";
+    } else if (
+      process.env.NODE_ENV === "production" &&
+      !hostname.includes("localhost")
+    ) {
+      const parts = hostname.split(".");
+      if (parts.length >= 2) {
+        cookieOptions.domain = "." + parts.slice(-2).join(".");
+      }
+    }
+  } catch (e) {
+    // Headers not available
+  }
+
+  cookieStore.set(SUPER_ADMIN_SESSION_COOKIE_NAME, "", cookieOptions);
 }
 
 export async function getCurrentUser() {
