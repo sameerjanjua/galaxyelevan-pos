@@ -19,9 +19,9 @@ async function loadProductDetail(productId, locationId) {
     if (locationId) params.set("locationId", locationId);
 
     const [productRes, suppliersRes, categoriesRes] = await Promise.all([
-      fetch(`/api/products/${productId}?${params.toString()}`),
-      fetch("/api/inventory/suppliers?limit=100"),
-      fetch("/api/categories?limit=200"),
+      fetch(`/api/tenant/products/${productId}?${params.toString()}`),
+      fetch("/api/tenant/inventory/suppliers?limit=100"),
+      fetch("/api/tenant/categories?limit=200"),
     ]);
 
     const product = productRes.ok ? await productRes.json() : null;
@@ -151,7 +151,7 @@ export default function ProductDetail() {
       const params = new URLSearchParams();
       if (activeLocationId) params.set("locationId", activeLocationId);
 
-      const res = await fetch(`/api/products/${productId}?${params.toString()}`, {
+      const res = await fetch(`/api/tenant/products/${productId}?${params.toString()}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

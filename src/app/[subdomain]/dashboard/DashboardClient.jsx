@@ -28,7 +28,7 @@ export function DashboardClient({ user }) {
         const params = new URLSearchParams();
         if (activeLocationId) params.set("locationId", activeLocationId);
 
-        const res = await fetch(`/api/dashboard?${params.toString()}`);
+        const res = await fetch(`/api/tenant/dashboard?${params.toString()}`);
         if (res.ok && !cancelled) {
           const data = await res.json();
           setTotalRevenue(data.totalRevenue);

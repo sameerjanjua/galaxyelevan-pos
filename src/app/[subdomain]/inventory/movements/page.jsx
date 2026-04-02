@@ -46,7 +46,7 @@ export default function StockMovements() {
         query.set("locationId", activeLocationId);
       }
 
-      const res = await fetch(`/api/inventory/stock/movements?${query}`);
+      const res = await fetch(`/api/tenant/inventory/stock/movements?${query}`);
       if (res.ok) {
         const data = await res.json();
         setMovements(data.movements || []);

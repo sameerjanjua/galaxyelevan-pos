@@ -42,7 +42,7 @@ export function BarcodeScannerComponent({ products, locationId }) {
     try {
       // Build URL with locationId parameter
       const buildUrl = (param, value) => {
-        const url = new URL(`/api/products/lookup`, window.location.origin);
+        const url = new URL(`/api/tenant/products/lookup`, window.location.origin);
         url.searchParams.append(param, value);
         if (locationId) {
           url.searchParams.append("locationId", locationId);

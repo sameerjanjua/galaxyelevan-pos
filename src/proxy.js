@@ -60,7 +60,7 @@ export async function proxy(request) {
   // 2. Handle Public Paths & Excluded APIs
   // These should never be rewritten or redirected based on subdomain
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
-  const isExcludedApi = pathname.startsWith("/api/auth") || pathname.startsWith("/api/admin");
+  const isExcludedApi = pathname.startsWith("/api/auth") || pathname.startsWith("/api/admin") || pathname.startsWith("/api/tenant");
   
   if (isPublicPath || isExcludedApi) {
     return NextResponse.next();
@@ -164,5 +164,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|api/auth|api/admin).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|api/auth|api/admin|api/tenant).*)"],
 };

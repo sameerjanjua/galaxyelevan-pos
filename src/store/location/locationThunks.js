@@ -4,7 +4,7 @@ export const fetchLocations = createAsyncThunk(
   "location/fetchLocations",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch("/api/locations");
+      const response = await fetch("/api/tenant/locations");
       if (!response.ok) {
         return rejectWithValue("Failed to fetch locations");
       }
@@ -20,7 +20,7 @@ export const createLocation = createAsyncThunk(
   "location/createLocation",
   async (locationData, { rejectWithValue }) => {
     try {
-      const response = await fetch("/api/locations", {
+      const response = await fetch("/api/tenant/locations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(locationData),
@@ -43,7 +43,7 @@ export const updateLocation = createAsyncThunk(
   "location/updateLocation",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/locations/${id}`, {
+      const response = await fetch(`/api/tenant/locations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -68,7 +68,7 @@ export const deleteLocation = createAsyncThunk(
   "location/deleteLocation",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/locations/${id}`, {
+      const response = await fetch(`/api/tenant/locations/${id}`, {
         method: "DELETE",
       });
 

@@ -37,7 +37,7 @@ export default function StockLevels() {
       const params = new URLSearchParams();
       if (activeLocationId) params.set("locationId", activeLocationId);
 
-      const res = await fetch(`/api/inventory/stock/current?${params.toString()}`);
+      const res = await fetch(`/api/tenant/inventory/stock/current?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setStocks(data.stocks || []);
@@ -84,7 +84,7 @@ export default function StockLevels() {
   const handleSave = async (stock) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/inventory/stock/min-quantity", {
+      const res = await fetch("/api/tenant/inventory/stock/min-quantity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

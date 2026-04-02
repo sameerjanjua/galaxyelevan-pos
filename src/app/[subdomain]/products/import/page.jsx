@@ -35,7 +35,7 @@ export default function BulkImportPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/products/import", {
+      const response = await fetch("/api/tenant/products/import", {
         method: "POST",
         body: formData,
       });

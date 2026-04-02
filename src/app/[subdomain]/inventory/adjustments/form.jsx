@@ -61,8 +61,8 @@ export default function AdjustmentsForm() {
   const fetchData = async () => {
     try {
       const [productsRes, locationsRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/locations"),
+        fetch("/api/tenant/products"),
+        fetch("/api/tenant/locations"),
       ]);
 
       if (productsRes.ok) {
@@ -89,7 +89,7 @@ export default function AdjustmentsForm() {
 
     try {
       const res = await fetch(
-        `/api/inventory/stock/current?productId=${formData.productId}&locationId=${formData.locationId}`
+        `/api/tenant/inventory/stock/current?productId=${formData.productId}&locationId=${formData.locationId}`
       );
       if (res.ok) {
         const data = await res.json();
@@ -117,7 +117,7 @@ export default function AdjustmentsForm() {
     setMessage("");
 
     try {
-      const res = await fetch("/api/inventory/stock/adjust", {
+      const res = await fetch("/api/tenant/inventory/stock/adjust", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

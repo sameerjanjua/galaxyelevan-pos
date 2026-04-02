@@ -50,9 +50,9 @@ export default function StockTransfers() {
   const fetchData = async () => {
     try {
       const [productsRes, locationsRes, stocksRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/locations"),
-        fetch("/api/inventory/stock/current"),
+        fetch("/api/tenant/products"),
+        fetch("/api/tenant/locations"),
+        fetch("/api/tenant/inventory/stock/current"),
       ]);
 
       if (productsRes.ok) {
@@ -114,7 +114,7 @@ export default function StockTransfers() {
     setMessage("");
 
     try {
-      const res = await fetch("/api/inventory/stock/transfer", {
+      const res = await fetch("/api/tenant/inventory/stock/transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

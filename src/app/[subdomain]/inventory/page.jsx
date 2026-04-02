@@ -41,9 +41,9 @@ export default function InventoryDashboard() {
       movParams.set("limit", "10");
 
       const [alertsRes, valuationRes, movementsRes] = await Promise.all([
-        fetch(`/api/inventory/alerts/low-stock?${alertsParams.toString()}`),
-        fetch(`/api/inventory/reports/valuation?${valParams.toString()}`),
-        fetch(`/api/inventory/stock/movements?${movParams.toString()}`),
+        fetch(`/api/tenant/inventory/alerts/low-stock?${alertsParams.toString()}`),
+        fetch(`/api/tenant/inventory/reports/valuation?${valParams.toString()}`),
+        fetch(`/api/tenant/inventory/stock/movements?${movParams.toString()}`),
       ]);
 
       if (alertsRes.ok) setAlerts(await alertsRes.json());

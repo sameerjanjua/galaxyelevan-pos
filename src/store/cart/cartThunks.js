@@ -7,7 +7,7 @@ export const createSale = createAsyncThunk(
       const state = thunkAPI.getState();
       const items = state.cart.items;
 
-      const res = await fetch("/api/pos/sale", {
+      const res = await fetch("/api/tenant/pos/sale", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

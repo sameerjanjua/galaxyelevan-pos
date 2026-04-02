@@ -27,7 +27,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
   useEffect(() => {
     if (prevLocationRef.current !== activeLocationId) {
       prevLocationRef.current = activeLocationId;
-      const listUrl = new URL("/api/users", window.location.origin);
+      const listUrl = new URL("/api/tenant/users", window.location.origin);
       if (activeLocationId) {
         listUrl.searchParams.append("locationId", activeLocationId);
       }
@@ -106,7 +106,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
     }
 
     try {
-      const url = editingUser ? `/api/users/${editingUser.id}` : "/api/users";
+      const url = editingUser ? `/api/tenant/users/${editingUser.id}` : "/api/tenant/users";
       const method = editingUser ? "PATCH" : "POST";
 
       const payload = { ...formData };
@@ -128,7 +128,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
 
       // Reload list with active location context
       router.refresh();
-      const listUrl = new URL("/api/users", window.location.origin);
+      const listUrl = new URL("/api/tenant/users", window.location.origin);
       if (activeLocationId) {
         listUrl.searchParams.append("locationId", activeLocationId);
       }
@@ -148,7 +148,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
     if (user.id === currentUserId) return;
     
     try {
-       const res = await fetch(`/api/users/${user.id}`, {
+       const res = await fetch(`/api/tenant/users/${user.id}`, {
          method: "PATCH",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ isActive: !user.isActive }),

@@ -41,7 +41,7 @@ export function PosClient({ customers, allLocations, user }) {
         if (effectiveLocationId) params.set("locationId", effectiveLocationId);
         params.set("limit", "200");
 
-        const res = await fetch(`/api/products?${params.toString()}`);
+        const res = await fetch(`/api/tenant/products?${params.toString()}`);
         if (res.ok && !cancelled) {
           const data = await res.json();
           const mapped = (data.products || []).map((p) => ({

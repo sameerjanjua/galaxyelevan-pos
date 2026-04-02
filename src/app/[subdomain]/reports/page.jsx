@@ -18,7 +18,7 @@ export default function ReportsPage() {
         const params = new URLSearchParams();
         if (activeLocationId) params.set("locationId", activeLocationId);
 
-        const res = await fetch(`/api/reports?${params.toString()}`);
+        const res = await fetch(`/api/tenant/reports?${params.toString()}`);
         if (res.ok && !cancelled) {
           const data = await res.json();
           setDaily(data.daily || []);

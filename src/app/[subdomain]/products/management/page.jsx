@@ -40,8 +40,8 @@ export default function ProductsManagement() {
       if (activeLocationId) params.set("locationId", activeLocationId);
 
       const [productsRes, suppliersRes] = await Promise.all([
-        fetch(`/api/products?${params.toString()}`),
-        fetch("/api/inventory/suppliers?limit=100"),
+        fetch(`/api/tenant/products?${params.toString()}`),
+        fetch("/api/tenant/inventory/suppliers?limit=100"),
       ]);
 
       if (productsRes.ok) {

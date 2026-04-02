@@ -20,7 +20,7 @@ export function useRealTimeStock(productIds = null, enabled = true, locationId =
       setLoading(true);
       setError(null);
 
-      const url = new URL("/api/pos/stock-levels", window.location.origin);
+      const url = new URL("/api/tenant/pos/stock-levels", window.location.origin);
       if (productIds && productIds.length > 0) {
         productIds.forEach((id) => url.searchParams.append("productIds", id));
       }

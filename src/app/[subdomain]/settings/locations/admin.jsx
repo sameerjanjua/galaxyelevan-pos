@@ -46,7 +46,7 @@ export default function LocationsAdminPage() {
   const handleDeleteLocation = async (id) => {
     setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/locations/${id}`, {
+      const response = await fetch(`/api/tenant/locations/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {

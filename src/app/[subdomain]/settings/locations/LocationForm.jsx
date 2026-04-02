@@ -53,8 +53,8 @@ export function LocationForm({ location, onSuccess }) {
     try {
       const method = isEdit ? "PATCH" : "POST";
       const url = isEdit
-        ? `/api/locations/${location.id}`
-        : "/api/locations";
+        ? `/api/tenant/locations/${location.id}`
+        : "/api/tenant/locations";
 
       const response = await fetch(url, {
         method,
