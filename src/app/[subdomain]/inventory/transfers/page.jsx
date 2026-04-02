@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 
 export default function StockTransfers() {
   const user = useSelector((state) => state.auth.user);
+  const { activeLocationId } = useActiveLocation();
+
   const [products, setProducts] = useState([]);
   const [locations, setLocations] = useState([]);
   const [stocks, setStocks] = useState([]);
@@ -31,12 +34,14 @@ export default function StockTransfers() {
     fetchData();
   }, []);
 
-  // Set default fromLocationId for Managers
+  // Sync activeLocationId changes down to form if it isn't set yet or user explicitly changed context
   useEffect(() => {
-    if (user?.role === "MANAGER" && user?.locationId && locations.length > 0) {
+    if (activeLocationId) {
+      setFormData(prev => ({ ...prev, fromLocationId: activeLocationId }));
+    } else if (user?.role === "MANAGER" && user?.locationId && locations.length > 0) {
       setFormData((prev) => ({ ...prev, fromLocationId: user.locationId }));
     }
-  }, [user, locations]);
+  }, [activeLocationId, user, locations]);
 
   useEffect(() => {
     checkFromStock();

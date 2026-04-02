@@ -4,17 +4,23 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import Link from "next/link";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 
 export default function AdjustmentsForm() {
   const searchParams = useSearchParams();
   const { user } = useSelector((state) => state.auth);
+  
   const isOwner = user?.role === "OWNER";
+  const isGlobalManager = user?.role === "MANAGER" && !user?.locationId;
+  const canSelectLocation = isOwner || isGlobalManager;
+  
+  const { activeLocationId } = useActiveLocation();
 
   const [products, setProducts] = useState([]);
   const [locations, setLocations] = useState([]);
   const [formData, setFormData] = useState({
     productId: searchParams?.get("product") || "",
-    locationId: (isOwner ? searchParams?.get("location") : user?.locationId) || "",
+    locationId: searchParams?.get("location") || activeLocationId || user?.locationId || "",
     quantity: "",
     type: "CORRECTION",
     notes: "",
@@ -35,11 +41,18 @@ export default function AdjustmentsForm() {
     fetchData();
   }, []);
 
+  // Sync activeLocationId changes down to form if it isn't set yet or user explicitly changed context
   useEffect(() => {
-    if (!isOwner && user?.locationId) {
+    if (activeLocationId && !formData.locationId) {
+      setFormData(prev => ({ ...prev, locationId: activeLocationId }));
+    }
+  }, [activeLocationId]);
+
+  useEffect(() => {
+    if (!canSelectLocation && user?.locationId) {
       setFormData((prev) => ({ ...prev, locationId: user.locationId }));
     }
-  }, [user, isOwner]);
+  }, [user, canSelectLocation]);
 
   useEffect(() => {
     updateProjection();
@@ -195,9 +208,9 @@ export default function AdjustmentsForm() {
             onChange={(e) =>
               setFormData({ ...formData, locationId: e.target.value })
             }
-            disabled={!isOwner}
+            disabled={!canSelectLocation}
             className={`w-full bg-gray-800 border border-gray-700 text-white px-4 py-2 rounded ${
-              !isOwner ? "opacity-75 cursor-not-allowed" : ""
+              !canSelectLocation ? "opacity-75 cursor-not-allowed" : ""
             }`}
           >
             <option value="">Select a location...</option>
@@ -207,7 +220,7 @@ export default function AdjustmentsForm() {
               </option>
             ))}
           </select>
-          {!isOwner && user?.locationId && (
+          {!canSelectLocation && user?.locationId && (
             <p className="text-xs text-gray-500 mt-1">
               Location is locked based on your assigned access.
             </p>

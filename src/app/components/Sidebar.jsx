@@ -5,18 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedLocation } from "@/store/location/locationSlice";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 import { LocationSelector } from "./LocationSelector";
 
 export function Sidebar() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const locations = useSelector((state) => state.location.locations);
-  const selectedLocationId = useSelector(
-    (state) => state.location.selectedLocationId
-  );
+  const { activeLocationId, canSwitch, locations } = useActiveLocation();
   const [collapsed, setCollapsed] = useState(false);
-
 
   const navigationGroups = [
     {
@@ -61,10 +58,6 @@ export function Sidebar() {
 
   const isActive = (href) => pathname === href;
 
-  const activeGroup = navigationGroups.findIndex((group) =>
-    group.items.some((item) => isActive(item.href))
-  );
-
   return (
     <aside
       className={`${collapsed ? "w-20" : "w-64"
@@ -87,9 +80,13 @@ export function Sidebar() {
         <div className="p-4 border-b border-slate-800">
           <LocationSelector
             locations={locations}
-            selectedId={user?.role === "OWNER" ? selectedLocationId : user?.locationId}
-            onSelect={user?.role === "OWNER" ? (id) => dispatch(setSelectedLocation(id)) : undefined}
-            userRole={user?.role}
+            selectedId={activeLocationId}
+            onSelect={
+              canSwitch
+                ? (id) => dispatch(setSelectedLocation(id))
+                : undefined
+            }
+            canSwitch={canSwitch}
           />
         </div>
       )}

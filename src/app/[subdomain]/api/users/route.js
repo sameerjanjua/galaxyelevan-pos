@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 import crypto from "node:crypto";
 
 function hashPassword(password) {
@@ -18,12 +19,18 @@ export async function GET(req) {
     const roleError = requireRole(user, [ROLES.OWNER, ROLES.MANAGER]);
     if (roleError) return roleError;
 
+    // Extract selected location from query parameters
+    const { searchParams } = new URL(req.url);
+    const requestedLocationId = searchParams.get("locationId") || searchParams.get("selectedLocationId");
+
     const where = { tenantId: user.tenantId };
     
-    // Non-owners can only see users based on their location and NEVER see the OWNER
+    // Apply centralized location filter based on sidebar selection
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
+    Object.assign(where, locationFilter);
+    
+    // Non-owners should not see the OWNER
     if (user.role !== ROLES.OWNER) {
-      const locationFilter = getLocationFilter(user);
-      Object.assign(where, locationFilter);
       where.role = { not: ROLES.OWNER };
     }
 
@@ -77,6 +84,14 @@ export async function POST(req) {
       return NextResponse.json(
         { error: "Only owners can create owner accounts" },
         { status: 403 }
+      );
+    }
+
+    // Staff must always have a location assigned
+    if (role === ROLES.STAFF && !locationId) {
+      return NextResponse.json(
+        { error: "Staff members must be assigned to a specific location" },
+        { status: 400 }
       );
     }
 

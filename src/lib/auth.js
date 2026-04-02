@@ -344,29 +344,4 @@ export function getRolePermissions(role) {
   return permissions[role] || [];
 }
 
-/**
- * Get location filter for Prisma queries based on user role
- * @param {object} user - User object from requireUser()
- * @returns {object} Prisma where clause fragment
- */
-export function getLocationFilter(user) {
-  if (!user) return {};
-  
-  // Owners can see everything
-  if (user.role === ROLES.OWNER) {
-    return {};
-  }
-  
-  // Managers and Staff are limited to their assigned location
-  if (user.role === ROLES.MANAGER || user.role === ROLES.STAFF) {
-    if (user.locationId) {
-      return { locationId: user.locationId };
-    }
-    // If a non-owner has no location assigned, they should see NOTHING 
-    // to prevent accidental data leakage across the tenant.
-    return { locationId: "UNASSIGNED_RESTRICTED" };
-  }
-  
-  return {};
-}
 

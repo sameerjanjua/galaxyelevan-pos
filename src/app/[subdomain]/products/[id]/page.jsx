@@ -4,16 +4,22 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
+import { useActiveLocation } from "@/lib/useActiveLocation";
+
 const productDetailCache = new Map();
 
-async function loadProductDetail(productId) {
-  if (productDetailCache.has(productId)) {
-    return productDetailCache.get(productId);
+async function loadProductDetail(productId, locationId) {
+  const cacheKey = `${productId}-${locationId || 'all'}`;
+  if (productDetailCache.has(cacheKey)) {
+    return productDetailCache.get(cacheKey);
   }
 
   const request = (async () => {
+    const params = new URLSearchParams();
+    if (locationId) params.set("locationId", locationId);
+
     const [productRes, suppliersRes, categoriesRes] = await Promise.all([
-      fetch(`/api/products/${productId}`),
+      fetch(`/api/products/${productId}?${params.toString()}`),
       fetch("/api/inventory/suppliers?limit=100"),
       fetch("/api/categories?limit=200"),
     ]);
@@ -30,14 +36,14 @@ async function loadProductDetail(productId) {
     };
   })();
 
-  productDetailCache.set(productId, request);
+  productDetailCache.set(cacheKey, request);
 
   try {
     const data = await request;
-    productDetailCache.set(productId, data);
+    productDetailCache.set(cacheKey, data);
     return data;
   } catch (error) {
-    productDetailCache.delete(productId);
+    productDetailCache.delete(cacheKey);
     throw error;
   }
 }
@@ -78,12 +84,15 @@ export default function ProductDetail() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  const { activeLocationId } = useActiveLocation();
+
   useEffect(() => {
     let active = true;
 
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const data = await loadProductDetail(productId);
+        const data = await loadProductDetail(productId, activeLocationId);
 
         if (!active) {
           return;
@@ -118,7 +127,7 @@ export default function ProductDetail() {
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [productId, activeLocationId]);
 
   const set = (key) => (e) => {
     const val =
@@ -139,7 +148,10 @@ export default function ProductDetail() {
     };
 
     try {
-      const res = await fetch(`/api/products/${productId}`, {
+      const params = new URLSearchParams();
+      if (activeLocationId) params.set("locationId", activeLocationId);
+
+      const res = await fetch(`/api/products/${productId}?${params.toString()}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

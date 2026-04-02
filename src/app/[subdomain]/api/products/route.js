@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 import {
   emitToProducts,
   emitToInventory,
@@ -15,15 +16,13 @@ export async function GET(req) {
 
     const category = searchParams.get("category");
     const supplier = searchParams.get("supplier");
+    const requestedLocationId = searchParams.get("locationId");
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const skip = (page - 1) * limit;
 
-    // Define location filter for stocks
-    const locationFilter =
-      user.role !== ROLES.OWNER && user.locationId
-        ? { locationId: user.locationId }
-        : {};
+    // Use centralized location filter based on role + sidebar selection
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     // Build where clause
     const where = { tenantId: user.tenantId };

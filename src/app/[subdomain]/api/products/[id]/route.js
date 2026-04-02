@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 
 export async function GET(req, { params }) {
   try {
     const user = await requireUser();
     const { id } = await params;
+    const { searchParams } = new URL(req.url);
+    const requestedLocationId = searchParams.get("locationId");
 
-    const locationFilter =
-      user.role !== ROLES.OWNER && user.locationId
-        ? { locationId: user.locationId }
-        : {};
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     const product = await prisma.product.findUnique({
       where: { id },
@@ -97,11 +97,10 @@ export async function PATCH(req, { params }) {
 
     const { id } = await params;
     const body = await req.json();
+    const { searchParams } = new URL(req.url);
+    const requestedLocationId = searchParams.get("locationId");
 
-    const locationFilter =
-      user.role !== ROLES.OWNER && user.locationId
-        ? { locationId: user.locationId }
-        : {};
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     // Verify product belongs to tenant
     const product = await prisma.product.findUnique({
@@ -244,11 +243,10 @@ export async function DELETE(req, { params }) {
     if (roleError) return roleError;
 
     const { id } = await params;
+    const { searchParams } = new URL(req.url);
+    const requestedLocationId = searchParams.get("locationId");
 
-    const locationFilter =
-      user.role !== ROLES.OWNER && user.locationId
-        ? { locationId: user.locationId }
-        : {};
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     // Verify product belongs to tenant
     const product = await prisma.product.findUnique({

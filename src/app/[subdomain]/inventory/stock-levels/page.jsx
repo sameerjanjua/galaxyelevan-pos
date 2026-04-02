@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 
 export default function StockLevels() {
+  const { activeLocationId, activeLocationName, isAllLocations } = useActiveLocation();
   const [stocks, setStocks] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,24 +14,30 @@ export default function StockLevels() {
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
-  const hasFetchedRef = useRef(false);
+  const lastFetchKeyRef = useRef(null);
 
+  // Re-fetch when location changes
   useEffect(() => {
-    if (hasFetchedRef.current) {
+    const fetchKey = activeLocationId || "all";
+    if (lastFetchKeyRef.current === fetchKey) {
       return;
     }
 
-    hasFetchedRef.current = true;
+    lastFetchKeyRef.current = fetchKey;
     fetchStocks();
-  }, []);
+  }, [activeLocationId]);
 
   useEffect(() => {
     filterStocks();
   }, [stocks, status, search]);
 
   const fetchStocks = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/inventory/stock/current");
+      const params = new URLSearchParams();
+      if (activeLocationId) params.set("locationId", activeLocationId);
+
+      const res = await fetch(`/api/inventory/stock/current?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setStocks(data.stocks || []);
@@ -125,7 +133,12 @@ export default function StockLevels() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Stock Levels</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-white">Stock Levels</h1>
+          <p className="text-xs text-slate-400 mt-1">
+            📍 {isAllLocations ? "All Locations" : activeLocationName}
+          </p>
+        </div>
         <Link
           href="/inventory"
           className="text-blue-400 hover:text-blue-300 text-sm"

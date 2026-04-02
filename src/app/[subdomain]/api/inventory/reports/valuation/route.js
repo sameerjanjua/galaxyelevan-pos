@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUser, requireRole, ROLES, getLocationFilter } from "@/lib/auth";
+import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 
 export async function GET(req) {
   try {
@@ -12,8 +13,10 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
 
-    const locationId = searchParams.get("locationId");
+    const requestedLocationId = searchParams.get("locationId");
     const categoryId = searchParams.get("categoryId");
+
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     // Get all stocks with product details
     const where = {
@@ -21,8 +24,7 @@ export async function GET(req) {
         tenantId: user.tenantId,
         ...(categoryId && { categoryId }),
       },
-      ...getLocationFilter(user),
-      ...(locationId && { locationId }),
+      ...locationFilter,
     };
 
     const stocks = await prisma.stock.findMany({

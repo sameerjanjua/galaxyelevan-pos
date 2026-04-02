@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useSelector } from "react-redux";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 import { InventoryClient } from "./InventoryClient";
 
 export default function InventoryDashboard() {
@@ -10,25 +10,40 @@ export default function InventoryDashboard() {
   const [valuation, setValuation] = useState(null);
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
+  
   const user = useSelector((state) => state.auth.user);
   const tenantId = user?.tenantId ?? null;
-  const hasFetchedRef = useRef(false);
+  
+  const { activeLocationId } = useActiveLocation();
+  const lastFetchKeyRef = useRef(null);
 
   useEffect(() => {
-    if (hasFetchedRef.current) {
+    const fetchKey = activeLocationId || "all";
+    if (lastFetchKeyRef.current === fetchKey) {
       return;
     }
 
-    hasFetchedRef.current = true;
+    lastFetchKeyRef.current = fetchKey;
     fetchData();
-  }, []);
+  }, [activeLocationId]);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
+      const params = new URLSearchParams();
+      if (activeLocationId) {
+        params.set("locationId", activeLocationId);
+      }
+      
+      const alertsParams = new URLSearchParams(params);
+      const valParams = new URLSearchParams(params);
+      const movParams = new URLSearchParams(params);
+      movParams.set("limit", "10");
+
       const [alertsRes, valuationRes, movementsRes] = await Promise.all([
-        fetch("/api/inventory/alerts/low-stock"),
-        fetch("/api/inventory/reports/valuation"),
-        fetch("/api/inventory/stock/movements?limit=10"),
+        fetch(`/api/inventory/alerts/low-stock?${alertsParams.toString()}`),
+        fetch(`/api/inventory/reports/valuation?${valParams.toString()}`),
+        fetch(`/api/inventory/stock/movements?${movParams.toString()}`),
       ]);
 
       if (alertsRes.ok) setAlerts(await alertsRes.json());

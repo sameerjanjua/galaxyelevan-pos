@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/auth/authSlice";
-import { setLocations } from "@/store/location/locationSlice";
+import { setLocations, initializeLocationForUser } from "@/store/location/locationSlice";
 import { fetchCurrentUser } from "@/store/auth/authThunks";
 import { fetchLocations } from "@/store/location/locationThunks";
 import { Sidebar } from "./Sidebar";
@@ -37,6 +37,14 @@ export function AppLayout({ children, initialUser = null, initialLocations = nul
 
       if (Array.isArray(initialLocations)) {
         dispatch(setLocations(initialLocations));
+
+        // Initialize location context for this user
+        if (initialUser) {
+          dispatch(initializeLocationForUser({
+            user: initialUser,
+            locations: initialLocations,
+          }));
+        }
 
         // If server hydration has no locations, fetch once from API on the client.
         if (initialLocations.length === 0) {

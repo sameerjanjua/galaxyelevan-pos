@@ -1,4 +1,5 @@
-import { requireUser, getLocationFilter } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -11,7 +12,8 @@ export default async function UsersPage() {
     redirect("/dashboard");
   }
 
-  const locationFilter = getLocationFilter(user);
+  // Pass null to use their base context (all or assigned location only)
+  const locationFilter = resolveLocationFilter(user, null);
   const where = { 
     tenantId: user.tenantId,
     ...locationFilter 

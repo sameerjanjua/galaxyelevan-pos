@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 
 export function UsersClient({ initialUsers, locations, currentUserRole, currentUserId }) {
   const [users, setUsers] = useState(initialUsers);
@@ -17,6 +18,37 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  
+  // Get active location from sidebar
+  const { activeLocationId } = useActiveLocation();
+
+  const prevLocationRef = useRef(activeLocationId);
+  
+  useEffect(() => {
+    if (prevLocationRef.current !== activeLocationId) {
+      prevLocationRef.current = activeLocationId;
+      const listUrl = new URL("/api/users", window.location.origin);
+      if (activeLocationId) {
+        listUrl.searchParams.append("locationId", activeLocationId);
+      }
+      fetch(listUrl.toString())
+        .then(res => res.json())
+        .then(data => {
+          if (data.users) setUsers(data.users);
+        })
+        .catch(err => console.error("Error fetching users:", err));
+    }
+  }, [activeLocationId]);
+
+  // Derived permissions
+  const myUserRecord = users.find(u => u.id === currentUserId);
+  const myLocation = myUserRecord?.locationId;
+  const isGlobalManager = currentUserRole === 'MANAGER' && !myLocation;
+
+  // Staff must always have a location — check if form is valid
+  const isStaffRole = formData.role === "STAFF";
+  const locationRequired = isStaffRole;
+  const locationMissing = locationRequired && !formData.locationId;
 
   // Handlers for modal
   const openNewModal = () => {
@@ -26,7 +58,9 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
       email: "",
       password: "",
       role: "STAFF",
-      locationId: currentUserRole === 'MANAGER' ? (users.find(u => u.id === currentUserId)?.locationId || "") : (locations.length > 0 ? locations[0].id : ""),
+      locationId: (currentUserRole === 'MANAGER' && !isGlobalManager)
+        ? (myLocation || "")
+        : (locations.length > 0 ? locations[0].id : ""),
     });
     setError("");
     setIsModalOpen(true);
@@ -37,7 +71,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
     setFormData({
       fullName: user.fullName,
       email: user.email,
-      password: "", // Leave blank unless changing
+      password: "",
       role: user.role,
       locationId: user.locationId || "",
     });
@@ -50,10 +84,26 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
     setEditingUser(null);
   };
 
+  const handleRoleChange = (newRole) => {
+    const updates = { role: newRole };
+    // If switching to Staff and no location selected, default to first location
+    if (newRole === "STAFF" && !formData.locationId && locations.length > 0) {
+      updates.locationId = locations[0].id;
+    }
+    setFormData({ ...formData, ...updates });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+
+    // Client-side validation: Staff must have a location
+    if (formData.role === "STAFF" && !formData.locationId) {
+      setError("Staff members must be assigned to a specific location.");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const url = editingUser ? `/api/users/${editingUser.id}` : "/api/users";
@@ -61,7 +111,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
 
       const payload = { ...formData };
       if (editingUser && !payload.password) {
-        delete payload.password; // Don't send empty password on update
+        delete payload.password;
       }
 
       const res = await fetch(url, {
@@ -76,10 +126,13 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
         throw new Error(data.error || "Failed to save user");
       }
 
-      // Reload list
+      // Reload list with active location context
       router.refresh();
-      // Refetch clientside
-      const fetchUsers = await fetch("/api/users");
+      const listUrl = new URL("/api/users", window.location.origin);
+      if (activeLocationId) {
+        listUrl.searchParams.append("locationId", activeLocationId);
+      }
+      const fetchUsers = await fetch(listUrl.toString());
       const fetchedData = await fetchUsers.json();
       if(fetchedData.users) setUsers(fetchedData.users);
 
@@ -140,51 +193,57 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
              </tr>
            </thead>
            <tbody className="divide-y divide-slate-800/60">
-             {users.map((user) => (
-               <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                 <td className="px-6 py-4">
-                   <div className="font-medium text-slate-200">{user.fullName}</div>
-                   <div className="text-xs text-slate-500">{user.email}</div>
-                 </td>
-                 <td className="px-6 py-4">
-                   <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-800 ${user.role === 'OWNER' ? 'text-amber-400' : user.role === 'MANAGER' ? 'text-sky-400' : 'text-emerald-400'}`}>
-                     {user.role}
-                   </span>
-                 </td>
-                 <td className="px-6 py-4 text-slate-300">
-                   {user.location?.name || <span className="text-slate-500 italic">All Locations</span>}
-                 </td>
-                 <td className="px-6 py-4">
-                   <span className={`inline-flex items-center gap-1.5 ${user.isActive ? 'text-emerald-400' : 'text-red-400'}`}>
-                     <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
-                     {user.isActive ? 'Active' : 'Inactive'}
-                   </span>
-                 </td>
-                 <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-3 text-sm">
-                      <button
-                        onClick={() => openEditModal(user)}
-                        disabled={
-                          (user.role === 'OWNER' && currentUserRole !== 'OWNER' && currentUserId !== user.id) ||
-                          (currentUserRole === 'MANAGER' && currentUserId !== user.id && (user.locationId !== users.find(u => u.id === currentUserId)?.locationId || user.role !== 'STAFF'))
-                        }
-                        className="text-sky-400 hover:text-sky-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        Edit
-                      </button>
-                      
-                      {user.id !== currentUserId && (currentUserRole === 'OWNER' || (currentUserRole === 'MANAGER' && user.locationId === users.find(u => u.id === currentUserId)?.locationId && user.role === 'STAFF')) && (
-                         <button
-                           onClick={() => toggleUserStatus(user)}
-                           className={`${user.isActive ? 'text-red-400 hover:text-red-300' : 'text-emerald-400 hover:text-emerald-300'}`}
-                         >
-                           {user.isActive ? 'Deactivate' : 'Activate'}
-                         </button>
-                      )}
-                    </div>
-                 </td>
-               </tr>
-             ))}
+             {users.map((user) => {
+               const canEdit = currentUserRole === 'OWNER' || currentUserId === user.id;
+                 
+               const canToggle = currentUserId !== user.id && (
+                 currentUserRole === 'OWNER' || 
+                 (currentUserRole === 'MANAGER' && user.role !== 'OWNER' && (isGlobalManager || (user.locationId === myLocation && user.role === 'STAFF')))
+               );
+
+               return (
+                 <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
+                   <td className="px-6 py-4">
+                     <div className="font-medium text-slate-200">{user.fullName}</div>
+                     <div className="text-xs text-slate-500">{user.email}</div>
+                   </td>
+                   <td className="px-6 py-4">
+                     <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-800 ${user.role === 'OWNER' ? 'text-amber-400' : user.role === 'MANAGER' ? 'text-sky-400' : 'text-emerald-400'}`}>
+                       {user.role}
+                     </span>
+                   </td>
+                   <td className="px-6 py-4 text-slate-300">
+                     {user.location?.name || <span className="text-slate-500 italic">All Locations</span>}
+                   </td>
+                   <td className="px-6 py-4">
+                     <span className={`inline-flex items-center gap-1.5 ${user.isActive ? 'text-emerald-400' : 'text-red-400'}`}>
+                       <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
+                       {user.isActive ? 'Active' : 'Inactive'}
+                     </span>
+                   </td>
+                   <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-3 text-sm">
+                        <button
+                          onClick={() => openEditModal(user)}
+                          disabled={!canEdit}
+                          className="text-sky-400 hover:text-sky-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          Edit
+                        </button>
+                        
+                        {canToggle && (
+                           <button
+                             onClick={() => toggleUserStatus(user)}
+                             className={`${user.isActive ? 'text-red-400 hover:text-red-300' : 'text-emerald-400 hover:text-emerald-300'}`}
+                           >
+                             {user.isActive ? 'Deactivate' : 'Activate'}
+                           </button>
+                        )}
+                      </div>
+                   </td>
+                 </tr>
+               );
+             })}
              {users.length === 0 && (
                <tr>
                  <td colSpan="5" className="px-6 py-8 text-center text-slate-500">
@@ -232,7 +291,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
                       required
                       type="email"
                       value={formData.email}
-                      disabled={!!editingUser && currentUserRole !== 'OWNER'}
+                      disabled={!!editingUser && currentUserRole !== 'OWNER' && !isGlobalManager}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="john@example.com"
@@ -258,9 +317,9 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
                      <label className="block text-xs font-medium text-slate-400 mb-1">Role *</label>
                      <select
                        required
-                       disabled={currentUserRole === 'MANAGER'}
+                       disabled={currentUserRole === 'MANAGER' && !isGlobalManager}
                        value={formData.role}
-                       onChange={(e) => setFormData({...formData, role: e.target.value})}
+                       onChange={(e) => handleRoleChange(e.target.value)}
                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 appearance-none disabled:opacity-50"
                      >
                        {currentUserRole === 'OWNER' && <option value="OWNER">Owner</option>}
@@ -270,18 +329,27 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
                    </div>
                    
                    <div>
-                     <label className="block text-xs font-medium text-slate-400 mb-1">Location</label>
+                     <label className="block text-xs font-medium text-slate-400 mb-1">
+                       Location {isStaffRole && <span className="text-red-400">*</span>}
+                     </label>
                      <select
-                       disabled={currentUserRole === 'MANAGER'}
+                       disabled={currentUserRole === 'MANAGER' && !isGlobalManager}
+                       required={isStaffRole}
                        value={formData.locationId || ""}
                        onChange={(e) => setFormData({...formData, locationId: e.target.value})}
-                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 appearance-none disabled:opacity-50"
+                       className={`w-full bg-slate-950 border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 appearance-none disabled:opacity-50 ${locationMissing ? 'border-red-600' : 'border-slate-800'}`}
                      >
-                       <option value="">All Locations (HQ)</option>
+                       {!isStaffRole && <option value="">All Locations (Global)</option>}
+                       {isStaffRole && !formData.locationId && <option value="">— Select a location —</option>}
                        {locations.map(loc => (
                          <option key={loc.id} value={loc.id}>{loc.name}</option>
                        ))}
                      </select>
+                     {isStaffRole && (
+                       <p className="text-[10px] text-slate-500 mt-1">
+                         Staff must be assigned to a specific location.
+                       </p>
+                     )}
                    </div>
                  </div>
                </form>
@@ -299,7 +367,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
                <button
                  type="submit"
                  form="user-form"
-                 disabled={isSubmitting}
+                 disabled={isSubmitting || locationMissing}
                  className="bg-sky-500 hover:bg-sky-400 text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
                >
                  {isSubmitting ? "Saving..." : "Save User"}

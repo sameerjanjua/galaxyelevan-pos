@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 
 export default function ProductsManagement() {
+  const { activeLocationId, activeLocationName, isAllLocations } = useActiveLocation();
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -12,25 +14,33 @@ export default function ProductsManagement() {
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const lastFetchedPageRef = useRef(null);
+  const lastFetchKeyRef = useRef(null);
 
+  // Re-fetch when page or location changes
   useEffect(() => {
-    if (lastFetchedPageRef.current === page) {
+    const fetchKey = `${page}-${activeLocationId || "all"}`;
+    if (lastFetchKeyRef.current === fetchKey) {
       return;
     }
 
-    lastFetchedPageRef.current = page;
+    lastFetchKeyRef.current = fetchKey;
     fetchData(page);
-  }, [page]);
+  }, [page, activeLocationId]);
 
   useEffect(() => {
     filterProducts();
   }, [products, search, lowStockOnly]);
 
   const fetchData = async (pageNumber) => {
+    setLoading(true);
     try {
-      const [productsRes, suppliersRes, locationsRes] = await Promise.all([
-        fetch(`/api/products?page=${pageNumber}&limit=50`),
+      const params = new URLSearchParams();
+      params.set("page", pageNumber.toString());
+      params.set("limit", "50");
+      if (activeLocationId) params.set("locationId", activeLocationId);
+
+      const [productsRes, suppliersRes] = await Promise.all([
+        fetch(`/api/products?${params.toString()}`),
         fetch("/api/inventory/suppliers?limit=100"),
       ]);
 
@@ -95,7 +105,12 @@ export default function ProductsManagement() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Product Management</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-white">Product Management</h1>
+          <p className="text-xs text-slate-400 mt-1">
+            📍 {isAllLocations ? "All Locations" : activeLocationName}
+          </p>
+        </div>
         <div className="flex gap-2">
           <Link
             href="/products?new=true"

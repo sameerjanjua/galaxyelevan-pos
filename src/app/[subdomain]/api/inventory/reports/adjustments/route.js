@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUser, requireRole, ROLES, getLocationFilter } from "@/lib/auth";
+import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 
 export async function GET(req) {
   try {
@@ -14,6 +15,10 @@ export async function GET(req) {
 
     const type = searchParams.get("type"); // DAMAGE, LOSS, FOUND, CORRECTION
     const userId = searchParams.get("userId");
+    const requestedLocationId = searchParams.get("locationId");
+    
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
+
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "100", 10);
     const skip = (page - 1) * limit;
@@ -21,7 +26,7 @@ export async function GET(req) {
     const where = {
       tenantId: user.tenantId,
       type: { in: ["DAMAGE", "LOSS", "FOUND", "CORRECTION"] },
-      ...getLocationFilter(user),
+      ...locationFilter,
     };
 
     if (type) where.type = type;

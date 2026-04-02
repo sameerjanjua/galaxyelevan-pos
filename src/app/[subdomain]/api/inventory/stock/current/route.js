@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUser, requireRole, ROLES, getLocationFilter } from "@/lib/auth";
+import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 
 export async function GET(req) {
   try {
@@ -11,18 +12,20 @@ export async function GET(req) {
     if (roleError) return roleError;
 
     const { searchParams } = new URL(req.url);
-    const locationId = searchParams.get("locationId");
+    const requestedLocationId = searchParams.get("locationId");
     const productId = searchParams.get("productId");
+
+    // Use centralized location filter from sidebar selection
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     // Build where clause - must filter through product relationship to get tenantId
     const where = {
       product: {
         tenantId: user.tenantId,
       },
-      ...getLocationFilter(user),
+      ...locationFilter,
     };
 
-    if (locationId) where.locationId = locationId;
     if (productId) where.productId = productId;
 
     // Get current stock levels

@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useActiveLocation } from "@/lib/useActiveLocation";
 
 const INITIAL_FETCH_DEDUPE_MS = 1200;
 let lastInitialFetchAt = 0;
 
 export default function StockMovements() {
+  const { activeLocationId } = useActiveLocation();
+
   const [movements, setMovements] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +19,7 @@ export default function StockMovements() {
 
   useEffect(() => {
     // Deduplicate only rapid duplicate initial fetches from Strict Mode remounts.
-    if (type === "ALL" && page === 1) {
+    if (type === "ALL" && page === 1 && !activeLocationId) {
       const now = Date.now();
       if (now - lastInitialFetchAt < INITIAL_FETCH_DEDUPE_MS) {
         return;
@@ -25,19 +28,23 @@ export default function StockMovements() {
     }
 
     fetchMovements();
-  }, [type, page]);
+  }, [type, page, activeLocationId]);
 
   useEffect(() => {
     filterMovements();
   }, [movements]);
 
   const fetchMovements = async () => {
+    setLoading(true);
     try {
       const query = new URLSearchParams({
         page,
         limit: 50,
         ...(type !== "ALL" && { type }),
       });
+      if (activeLocationId) {
+        query.set("locationId", activeLocationId);
+      }
 
       const res = await fetch(`/api/inventory/stock/movements?${query}`);
       if (res.ok) {

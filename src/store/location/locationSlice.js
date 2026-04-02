@@ -9,6 +9,7 @@ import {
 const initialState = {
   locations: [],
   selectedLocationId: null,
+  initialized: false,
   loading: false,
   error: null,
 };
@@ -29,6 +30,37 @@ const locationSlice = createSlice({
           action.payload || ""
         );
       }
+    },
+    /**
+     * Initialize location context based on user role:
+     * - Owner / global Manager: restore from localStorage or null (all locations)
+     * - Assigned Manager / Staff: lock to user.locationId
+     *
+     * Expects payload: { user, locations }
+     */
+    initializeLocationForUser: (state, action) => {
+      const { user, locations } = action.payload;
+      if (!user || state.initialized) return;
+
+      const isOwner = user.role === "OWNER";
+      const isGlobalManager = user.role === "MANAGER" && !user.locationId;
+
+      if (isOwner || isGlobalManager) {
+        // Try restoring from localStorage
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem("selectedLocationId");
+          if (stored && locations.some((l) => l.id === stored)) {
+            state.selectedLocationId = stored;
+          } else {
+            state.selectedLocationId = null; // All locations
+          }
+        }
+      } else {
+        // Assigned manager or staff — fixed
+        state.selectedLocationId = user.locationId || null;
+      }
+
+      state.initialized = true;
     },
     addLocation: (state, action) => {
       state.locations.push(action.payload);
@@ -97,6 +129,7 @@ const locationSlice = createSlice({
 export const {
   setLocations,
   setSelectedLocation,
+  initializeLocationForUser,
   addLocation,
   updateLocationLocal,
   removeLocation,

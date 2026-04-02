@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUser, requireRole, ROLES, getLocationFilter } from "@/lib/auth";
+import { requireUser, requireRole, ROLES } from "@/lib/auth";
+import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 
 export async function GET(req) {
   try {
@@ -13,7 +14,8 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
 
     const days = parseInt(searchParams.get("days") || "90", 10);
-    const locationId = searchParams.get("locationId");
+    const requestedLocationId = searchParams.get("locationId");
+    const locationFilter = resolveLocationFilter(user, requestedLocationId);
 
     // Calculate date range
     const startDate = new Date();
@@ -29,13 +31,8 @@ export async function GET(req) {
       tenantId: user.tenantId,
       type: "SALE",
       createdAt: { gte: startDate },
-      ...getLocationFilter(user),
+      ...locationFilter,
     };
-
-    // Only allow overriding location filter if user is an OWNER
-    if (locationId && user.role === ROLES.OWNER) {
-      where.locationId = locationId;
-    }
 
     // Get sales movements for the period
     const movements = await prisma.stockMovement.findMany({
