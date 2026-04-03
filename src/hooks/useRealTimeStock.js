@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSocket } from "@/lib/use-socket";
+import { useSocket } from "@/hooks/use-socket";
 import { SOCKET_EVENTS } from "@/lib/socket-io";
 
 export function useRealTimeStock(productIds = null, enabled = true, locationId = null) {
