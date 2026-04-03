@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { useSocket } from "@/lib/use-socket";
+import { useSocket } from "@/hooks/use-socket";
 import { SOCKET_EVENTS } from "@/lib/socket-io";
-import { useActiveLocation } from "@/lib/useActiveLocation";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 export function DashboardClient({ user }) {
   const { activeLocationId, activeLocationName, isAllLocations } = useActiveLocation();

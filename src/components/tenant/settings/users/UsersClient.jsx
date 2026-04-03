@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useActiveLocation } from "@/lib/useActiveLocation";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 export function UsersClient({ initialUsers, locations, currentUserRole, currentUserId }) {
   const [users, setUsers] = useState(initialUsers);

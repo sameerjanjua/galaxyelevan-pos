@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useActiveLocation } from "@/lib/useActiveLocation";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 const INITIAL_FETCH_DEDUPE_MS = 1200;
 let lastInitialFetchAt = 0;

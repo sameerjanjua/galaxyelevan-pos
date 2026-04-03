@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { AdminNavbar } from "./components/AdminNavbar";
-import { AdminSidebar } from "./components/AdminSidebar";
+import { AdminNavbar } from "@/components/admin/navbar/AdminNavbar";
+import { AdminSidebar } from "@/components/admin/sidebar/AdminSidebar";
 import { clearSuperAdminSession, requireSuperAdmin } from "@/lib/auth";
 
 export default async function AdminLayout({ children }) {

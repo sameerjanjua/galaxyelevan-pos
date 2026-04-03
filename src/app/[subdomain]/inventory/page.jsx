@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { useActiveLocation } from "@/lib/useActiveLocation";
-import { InventoryClient } from "./InventoryClient";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
+import { InventoryClient } from "@/components/tenant/inventory/InventoryClient";
 
 export default function InventoryDashboard() {
   const [alerts, setAlerts] = useState(null);

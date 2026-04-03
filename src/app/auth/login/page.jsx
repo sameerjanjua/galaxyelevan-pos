@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import LoginClient from "./LoginClient";
+import LoginClient from "@/components/auth/login/LoginClient";
 
 export default async function LoginPage() {
   const user = await getCurrentUser();

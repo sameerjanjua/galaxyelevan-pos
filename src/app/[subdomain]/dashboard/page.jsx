@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import LogoutClient from "./LogoutClient";
-import { DashboardClient } from "./DashboardClient";
+import LogoutClient from "@/components/auth/logout/LogoutClient";
+import { DashboardClient } from "@/components/tenant/dashboard/DashboardClient";
 
 export default async function DashboardPage() {
   const user = await requireUser();

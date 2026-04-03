@@ -7,9 +7,9 @@ import { setCredentials } from "@/store/auth/authSlice";
 import { setLocations, initializeLocationForUser } from "@/store/location/locationSlice";
 import { fetchCurrentUser } from "@/store/auth/authThunks";
 import { fetchLocations } from "@/store/location/locationThunks";
-import { Sidebar } from "./Sidebar";
+import { Sidebar } from "../sidebar/Sidebar";
 
-export function AppLayout({ children, initialUser = null, initialLocations = null }) {
+export default function AppLayout({ children, initialUser = null, initialLocations = null }) {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const hasInitializedRef = useRef(false);

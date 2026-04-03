@@ -4,8 +4,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addItem, changeQty } from "@/store/cart/cartSlice";
 import { createSale } from "@/store/cart/cartThunks";
-import { BarcodeScanner } from "./BarcodeScanner";
-import { useRealTimeStock } from "./useRealTimeStock";
+import { BarcodeScanner } from "./barcode-scanner/BarcodeScanner";
+import { useRealTimeStock } from "@/hooks/useRealTimeStock";
 import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 export function PosClient({ customers, allLocations, user }) {

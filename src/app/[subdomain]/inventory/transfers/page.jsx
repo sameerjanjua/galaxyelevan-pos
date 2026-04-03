@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
-import { useActiveLocation } from "@/lib/useActiveLocation";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 export default function StockTransfers() {
   const user = useSelector((state) => state.auth.user);

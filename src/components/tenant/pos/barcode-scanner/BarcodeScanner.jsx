@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { addItem } from "@/store/cart/cartSlice";
 
-export function BarcodeScannerComponent({ products, locationId }) {
+export function BarcodeScanner({ products, locationId }) {
   const dispatch = useDispatch();
   const [barcodeInput, setBarcodeInput] = useState("");
   const [scannerMessage, setScannerMessage] = useState(null);

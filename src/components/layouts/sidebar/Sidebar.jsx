@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedLocation } from "@/store/location/locationSlice";
-import { useActiveLocation } from "@/lib/useActiveLocation";
-import { LocationSelector } from "./LocationSelector";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
+import { LocationSelector } from "@/components/common/location-selector/LocationSelector";
 
 export function Sidebar() {
   const pathname = usePathname();

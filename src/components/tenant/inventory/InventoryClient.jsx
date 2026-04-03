@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSocket } from "@/lib/use-socket";
+import { useSocket } from "@/hooks/use-socket";
 import { SOCKET_EVENTS } from "@/lib/socket-io";
 
 export function InventoryClient({

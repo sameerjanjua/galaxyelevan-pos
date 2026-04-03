@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser, ROLES } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { AppLayout } from "../components/AppLayout";
+import AppLayout from "@/components/layouts/app-layout/AppLayout";
 
 export default async function AdminLayout({ children }) {
 

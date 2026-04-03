@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-import { useActiveLocation } from "@/lib/useActiveLocation";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 const productDetailCache = new Map();
 

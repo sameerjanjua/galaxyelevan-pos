@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import AdjustmentsForm from "./form";
+import AdjustmentsForm from "@/components/tenant/inventory/adjustments/InventoryAdjustmentForm";
 
 export default function StockAdjustments() {
   return (

@@ -3,8 +3,8 @@ import { resolveLocationFilter } from "@/lib/resolveLocationFilter";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { UsersClient } from "./UsersClient";
-import LogoutClient from "@/app/[subdomain]/dashboard/LogoutClient";
+import { UsersClient } from "@/components/tenant/settings/users/UsersClient";
+import LogoutClient from "@/components/auth/logout/LogoutClient";
 
 export default async function UsersPage() {
   const user = await requireUser();

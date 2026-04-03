@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PosClient } from "./PosClient";
+import { PosClient } from "@/components/tenant/pos/PosClient";
 import { ROLES, hasRole } from "@/lib/auth";
 
 export default async function PosPage() {

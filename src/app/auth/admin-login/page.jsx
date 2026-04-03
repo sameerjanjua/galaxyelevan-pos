@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import AdminLoginClient from "./AdminLoginClient";
+import AdminLoginClient from "@/components/auth/admin-login/AdminLoginClient";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 

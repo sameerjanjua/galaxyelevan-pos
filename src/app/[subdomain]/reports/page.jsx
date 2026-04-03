@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useActiveLocation } from "@/lib/useActiveLocation";
+import { useActiveLocation } from "@/hooks/useActiveLocation";
 
 export default function ReportsPage() {
   const { activeLocationId, activeLocationName, isAllLocations } = useActiveLocation();
