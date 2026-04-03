@@ -80,6 +80,7 @@ model User {
   email        String     @unique
   passwordHash String
   fullName     String
+  phoneNumber  String     @default("")
   role         UserRole   @default(STAFF)
   isActive     Boolean    @default(true)
 

@@ -40,6 +40,7 @@ export async function GET(req) {
         id: true,
         email: true,
         fullName: true,
+        phoneNumber: true,
         role: true,
         isActive: true,
         locationId: true,
@@ -70,11 +71,11 @@ export async function POST(req) {
     if (roleError) return roleError;
 
     const body = await req.json();
-    const { email, password, fullName, role, locationId } = body;
+    const { email, password, fullName, phoneNumber, role, locationId } = body;
 
-    if (!email || !password || !fullName || !role) {
+    if (!email || !password || !fullName || !phoneNumber || !role) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields (email, password, name, phone, role)" },
         { status: 400 }
       );
     }
@@ -127,6 +128,7 @@ export async function POST(req) {
         email,
         passwordHash,
         fullName,
+        phoneNumber,
         role,
         locationId: finalLocationId || null,
       },
@@ -134,6 +136,7 @@ export async function POST(req) {
         id: true,
         email: true,
         fullName: true,
+        phoneNumber: true,
         role: true,
         isActive: true,
         locationId: true,

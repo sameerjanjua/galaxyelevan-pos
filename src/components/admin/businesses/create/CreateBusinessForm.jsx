@@ -14,6 +14,7 @@ export default function CreateBusinessForm() {
     industry: "cafe",
     ownerEmail: "",
     ownerName: "",
+    ownerPhone: "",
     ownerPassword: "",
   });
 
@@ -175,6 +176,22 @@ export default function CreateBusinessForm() {
                   disabled={loading}
                 />
               </div>
+ 
+               <div>
+                 <label className="block text-sm font-medium text-gray-200 mb-2">
+                   Owner Phone Number *
+                 </label>
+                 <input
+                   type="tel"
+                   name="ownerPhone"
+                   value={formData.ownerPhone}
+                   onChange={handleChange}
+                   placeholder="e.g., +1234567890"
+                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   required
+                   disabled={loading}
+                 />
+               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">

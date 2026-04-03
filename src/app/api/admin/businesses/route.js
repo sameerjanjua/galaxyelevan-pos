@@ -91,10 +91,10 @@ export async function POST(request) {
     try {
         const superAdmin = await requireSuperAdmin();
 
-        const { name, slug, industry, ownerEmail, ownerName, ownerPassword } =
+        const { name, slug, industry, ownerEmail, ownerName, ownerPhone, ownerPassword } =
             await request.json();
 
-        if (!name || !ownerEmail || !ownerName || !ownerPassword) {
+        if (!name?.trim() || !ownerEmail?.trim() || !ownerName?.trim() || !ownerPhone?.trim() || !ownerPassword) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -162,6 +162,7 @@ export async function POST(request) {
                 data: {
                     email: ownerEmail,
                     fullName: ownerName,
+                    phoneNumber: ownerPhone,
                     passwordHash,
                     role: "OWNER",
                     tenantId: tenant.id,
@@ -185,6 +186,7 @@ export async function POST(request) {
                     owner: {
                         email: result.user.email,
                         name: result.user.fullName,
+                        phone: result.user.phoneNumber,
                     },
                 },
             },

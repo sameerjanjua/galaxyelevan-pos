@@ -11,6 +11,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
   const [formData, setFormData] = useState({
      fullName: "",
      email: "",
+     phoneNumber: "",
      password: "",
      role: "STAFF",
      locationId: "",
@@ -56,6 +57,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
     setFormData({
       fullName: "",
       email: "",
+      phoneNumber: "",
       password: "",
       role: "STAFF",
       locationId: (currentUserRole === 'MANAGER' && !isGlobalManager)
@@ -71,6 +73,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
     setFormData({
       fullName: user.fullName,
       email: user.email,
+      phoneNumber: user.phoneNumber || "",
       password: "",
       role: user.role,
       locationId: user.locationId || "",
@@ -205,6 +208,7 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
                    <td className="px-6 py-4">
                      <div className="font-medium text-slate-200">{user.fullName}</div>
+                     <div className="text-xs text-slate-400">{user.phoneNumber}</div>
                      <div className="text-xs text-slate-500">{user.email}</div>
                    </td>
                    <td className="px-6 py-4">
@@ -285,7 +289,20 @@ export function UsersClient({ initialUsers, locations, currentUserRole, currentU
                      placeholder="John Doe"
                    />
                  </div>
-                                  <div>
+
+                 <div>
+                   <label className="block text-xs font-medium text-slate-400 mb-1">Phone Number *</label>
+                   <input
+                     required
+                     type="tel"
+                     value={formData.phoneNumber}
+                     onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                     placeholder="+1234567890"
+                   />
+                 </div>
+
+                 <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1">Email Address *</label>
                     <input
                       required

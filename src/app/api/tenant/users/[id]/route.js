@@ -21,7 +21,7 @@ export async function PATCH(req, props) {
     if (roleError) return roleError;
 
     const body = await req.json();
-    const { email, fullName, role, locationId, isActive, password } = body;
+    const { email, fullName, phoneNumber, role, locationId, isActive, password } = body;
 
     // Verify the target user belongs to this tenant
     const targetUser = await prisma.user.findFirst({
@@ -67,7 +67,13 @@ export async function PATCH(req, props) {
 
       updateData.email = email;
     }
-    if (fullName) updateData.fullName = fullName;
+    if (fullName) updateData.fullName = fullName.trim();
+    if (phoneNumber !== undefined) {
+      if (!phoneNumber.trim()) {
+        return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+      }
+      updateData.phoneNumber = phoneNumber.trim();
+    }
     
     // Only allow role changes if current user is OWNER
     // OR if Manager is creating (POST), but this is PATCH
@@ -93,6 +99,7 @@ export async function PATCH(req, props) {
         id: true,
         email: true,
         fullName: true,
+        phoneNumber: true,
         role: true,
         isActive: true,
         locationId: true,
