@@ -91,12 +91,12 @@ export async function POST(request) {
     try {
         const superAdmin = await requireSuperAdmin();
 
-        const { name, slug, industry, ownerEmail, ownerName, ownerPhone, ownerPassword } =
+        const { name, slug, industry, ownerEmail, ownerName, ownerPhone, ownerPassword, address, city, country, locationPhone, timezone } =
             await request.json();
 
-        if (!name?.trim() || !ownerEmail?.trim() || !ownerName?.trim() || !ownerPhone?.trim() || !ownerPassword) {
+        if (!name?.trim() || !ownerEmail?.trim() || !ownerName?.trim() || !ownerPhone?.trim() || !ownerPassword || !address?.trim() || !city?.trim() || !country?.trim() || !locationPhone?.trim() || !timezone?.trim()) {
             return NextResponse.json(
-                { error: "Missing required fields" },
+                { error: "Missing required business, owner, or location fields" },
                 { status: 400 }
             );
         }
@@ -151,8 +151,12 @@ export async function POST(request) {
             const location = await tx.location.create({
                 data: {
                     name: `${name} - Main Location`,
+                    address,
+                    city,
+                    country,
+                    phone: locationPhone,
+                    timezone,
                     tenantId: tenant.id,
-                    timezone: "UTC",
                 },
             });
 

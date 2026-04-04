@@ -3,7 +3,7 @@ import { requireUser, ROLES } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AppLayout from "@/components/layouts/app-layout/AppLayout";
 
-export default async function AdminLayout({ children }) {
+export default async function TenantLayout({ children }) {
 
     const user = await requireUser();
     if (!user) {
@@ -20,11 +20,19 @@ export default async function AdminLayout({ children }) {
                 select: {
                     id: true,
                     name: true,
+                    code: true,
+                    address: true,
                     city: true,
                     country: true,
+                    phone: true,
+                    timezone: true,
+                    createdAt: true,
                 },
                 orderBy: { createdAt: "desc" },
-            })
+            }).then(locs => locs.map(loc => ({
+                ...loc,
+                createdAt: loc.createdAt?.toISOString() || null
+            })))
             : [];
 
     return (

@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { createLocation, updateLocation } from "@/store/location/locationThunks";
 
 export function LocationForm({ location, onSuccess }) {
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     name: location?.name || "",
     code: location?.code || "",
@@ -15,6 +18,20 @@ export function LocationForm({ location, onSuccess }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    if (location) {
+      setFormData({
+        name: location.name || "",
+        code: location.code || "",
+        address: location.address || "",
+        city: location.city || "",
+        country: location.country || "",
+        phone: location.phone || "",
+        timezone: location.timezone || "UTC",
+      });
+    }
+  }, [location]);
 
   const isEdit = !!location?.id;
   const timezones = [
@@ -44,39 +61,26 @@ export function LocationForm({ location, onSuccess }) {
     setError(null);
     setSaving(true);
 
-    if (!formData.name || !formData.code) {
-      setError("Name and code are required");
+    if (!formData.name || !formData.code || !formData.address || !formData.city || !formData.country || !formData.phone || !formData.timezone) {
+      setError("All location fields are required");
       setSaving(false);
       return;
     }
 
     try {
-      const method = isEdit ? "PATCH" : "POST";
-      const url = isEdit
-        ? `/api/tenant/locations/${location.id}`
-        : "/api/tenant/locations";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        setError(data.error || `Failed to ${isEdit ? "update" : "create"} location`);
-        setSaving(false);
-        return;
+      if (isEdit) {
+        await dispatch(updateLocation({ id: location.id, data: formData })).unwrap();
+      } else {
+        await dispatch(createLocation(formData)).unwrap();
       }
 
-      setSuccess(
-        `Location ${isEdit ? "updated" : "created"} successfully`
-      );
+      setSuccess(`Location ${isEdit ? "updated" : "created"} successfully`);
       setTimeout(() => {
-        onSuccess();
+        onSuccess?.();
       }, 1000);
     } catch (err) {
-      setError("Network error");
+      setError(err || "Network error");
+    } finally {
       setSaving(false);
     }
   };
@@ -96,6 +100,7 @@ export function LocationForm({ location, onSuccess }) {
             placeholder="e.g., Main Store"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
             disabled={saving}
+            required
           />
         </div>
 
@@ -113,6 +118,7 @@ export function LocationForm({ location, onSuccess }) {
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 uppercase"
             disabled={saving || (isEdit && !!location?.code)}
             title={isEdit && !!location?.code ? "Code cannot be changed" : ""}
+            required
           />
           {isEdit && !!location?.code && (
             <p className="text-xs text-slate-500 mt-1">Code cannot be changed</p>
@@ -132,6 +138,7 @@ export function LocationForm({ location, onSuccess }) {
           placeholder="e.g., 123 Main Street"
           className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
           disabled={saving}
+          required
         />
       </div>
 
@@ -148,6 +155,7 @@ export function LocationForm({ location, onSuccess }) {
             placeholder="e.g., New York"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
             disabled={saving}
+            required
           />
         </div>
 
@@ -163,6 +171,7 @@ export function LocationForm({ location, onSuccess }) {
             placeholder="e.g., USA"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
             disabled={saving}
+            required
           />
         </div>
       </div>
@@ -180,6 +189,7 @@ export function LocationForm({ location, onSuccess }) {
             placeholder="e.g., +1-555-0123"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
             disabled={saving}
+            required
           />
         </div>
 
@@ -193,6 +203,7 @@ export function LocationForm({ location, onSuccess }) {
             onChange={handleChange}
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
             disabled={saving}
+            required
           >
             {timezones.map((tz) => (
               <option key={tz} value={tz}>

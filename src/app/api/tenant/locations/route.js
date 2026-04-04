@@ -24,7 +24,7 @@ export async function GET(req) {
           timezone: true,
           createdAt: true,
         },
-        // orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" },
         skip,
         take: limit,
       }),
@@ -60,9 +60,9 @@ export async function POST(req) {
 
     const { name, code, address, city, country, phone, timezone } = body;
 
-    if (!name || !code) {
+    if (!name || !code || !address || !city || !country || !phone || !timezone) {
       return NextResponse.json(
-        { error: "Name and code are required" },
+        { error: "All location fields are required" },
         { status: 400 }
       );
     }
@@ -84,11 +84,11 @@ export async function POST(req) {
         tenantId: user.tenantId,
         name,
         code,
-        address: address || null,
-        city: city || null,
-        country: country || null,
-        phone: phone || null,
-        timezone: timezone || "UTC",
+        address,
+        city,
+        country,
+        phone,
+        timezone,
       },
       select: {
         id: true,

@@ -54,6 +54,15 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
     const body = await req.json();
 
+    const { name, code, address, city, country, phone, timezone } = body;
+
+    if (!name || !code || !address || !city || !country || !phone || !timezone) {
+      return NextResponse.json(
+        { error: "All location fields are required" },
+        { status: 400 }
+      );
+    }
+
     // Verify location belongs to user's tenant
     const location = await prisma.location.findUnique({
       where: { id },
