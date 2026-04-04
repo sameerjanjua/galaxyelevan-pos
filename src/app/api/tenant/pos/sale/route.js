@@ -38,20 +38,38 @@ export async function POST(req) {
       );
     }
 
-    let subtotal = 0;
+    let initialSubtotal = 0;
+    let totalLineDiscounts = 0;
 
     const lineItems = items
       .map((item) => {
         const product = products.find((p) => p.id === item.productId);
         if (!product || item.quantity <= 0) return null;
-        const price = Number(product.salePrice);
-        const lineTotal = price * item.quantity;
-        subtotal += lineTotal;
+        
+        const unitPrice = Number(product.salePrice);
+        const lineTotalBeforeDiscount = unitPrice * item.quantity;
+        
+        let lineDiscount = 0;
+        if (item.discountValue > 0) {
+          lineDiscount = item.discountType === "PERCENT" 
+            ? (lineTotalBeforeDiscount * (item.discountValue / 100))
+            : item.discountValue;
+        }
+        
+        // Ensure discount doesn't exceed line total
+        lineDiscount = Math.min(lineDiscount, lineTotalBeforeDiscount);
+        
+        const lineTotal = lineTotalBeforeDiscount - lineDiscount;
+        
+        initialSubtotal += lineTotalBeforeDiscount;
+        totalLineDiscounts += lineDiscount;
+        
         return {
           productId: item.productId,
           quantity: item.quantity,
-          unitPrice: price,
+          unitPrice,
           lineTotal,
+          discount: lineDiscount
         };
       })
       .filter((v) => v !== null);
@@ -63,13 +81,23 @@ export async function POST(req) {
       );
     }
 
-    const discountPercent = Number(body.discountPercent ?? 0);
-    const discountTotal =
-      !Number.isNaN(discountPercent) && discountPercent > 0
-        ? (subtotal * discountPercent) / 100
-        : 0;
+    const globalDiscountValue = Number(body.globalDiscountValue ?? 0);
+    const globalDiscountType = body.globalDiscountType ?? "PERCENT";
+    
+    const subtotalAfterLineDiscounts = initialSubtotal - totalLineDiscounts;
+    
+    let globalDiscountAmount = 0;
+    if (globalDiscountValue > 0) {
+      globalDiscountAmount = globalDiscountType === "PERCENT"
+        ? (subtotalAfterLineDiscounts * (globalDiscountValue / 100))
+        : globalDiscountValue;
+    }
+    
+    // Ensure global discount doesn't exceed subtotal
+    globalDiscountAmount = Math.min(globalDiscountAmount, subtotalAfterLineDiscounts);
 
-    const total = subtotal - discountTotal;
+    const finalDiscountTotal = totalLineDiscounts + globalDiscountAmount;
+    const finalTotal = initialSubtotal - finalDiscountTotal;
 
     // Get location from request (for admin overrides), user's assignment, or use default location
     let location;
@@ -193,10 +221,10 @@ export async function POST(req) {
         data: {
           invoiceNumber,
           status: "COMPLETED",
-          subtotal,
-          total,
+          subtotal: initialSubtotal,
+          total: finalTotal,
           taxTotal: 0,
-          discountTotal,
+          discountTotal: finalDiscountTotal,
           tenantId: user.tenantId,
           locationId: location.id,
           userId: user.id,
@@ -210,6 +238,7 @@ export async function POST(req) {
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               lineTotal: item.lineTotal,
+              discount: item.discount,
             })),
           },
         },

@@ -19,7 +19,20 @@ const cartSlice = createSlice({
       if (existing) {
         existing.quantity += 1;
       } else {
-        state.items.push({ productId, quantity: 1 });
+        state.items.push({ 
+          productId, 
+          quantity: 1,
+          discountType: "PERCENT",
+          discountValue: 0
+        });
+      }
+    },
+    setItemDiscount: (state, action) => {
+      const { productId, discountType, discountValue } = action.payload;
+      const item = state.items.find((i) => i.productId === productId);
+      if (item) {
+        if (discountType !== undefined) item.discountType = discountType;
+        if (discountValue !== undefined) item.discountValue = discountValue;
       }
     },
     changeQty: (state, action) => {
@@ -70,7 +83,7 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addItem, changeQty, clearCart, updateStockLevels, updateSingleProductStock } = cartSlice.actions;
+export const { addItem, setItemDiscount, changeQty, clearCart, updateStockLevels, updateSingleProductStock } = cartSlice.actions;
 
 export default cartSlice.reducer;
 
