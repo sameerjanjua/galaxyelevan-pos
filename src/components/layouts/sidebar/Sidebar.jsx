@@ -29,6 +29,7 @@ export function Sidebar() {
           title: "Products",
           items: [
             { href: "/products", label: "All Products", icon: "📦" },
+            { href: "/products/categories", label: "Categories", icon: "🏷️" },
             { href: "/products/management", label: "Management", icon: "⚙️" },
             { href: "/products/import", label: "Bulk Import", icon: "📥" },
           ],

@@ -24,3 +24,51 @@ export async function GET(req) {
     );
   }
 }
+
+export async function POST(req) {
+  try {
+    const user = await requireUser();
+    const { name, parentId } = await req.json();
+
+    if (!name || name.trim() === "") {
+      return NextResponse.json(
+        { error: "Category name is required" },
+        { status: 400 }
+      );
+    }
+
+    // Generate slug
+    let baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    if (!baseSlug) baseSlug = "category"; // fallback
+    
+    let slug = baseSlug;
+    let counter = 1;
+    while (true) {
+      const existing = await prisma.category.findUnique({
+        where: {
+          tenantId_slug: { tenantId: user.tenantId, slug },
+        },
+      });
+      if (!existing) break;
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    const category = await prisma.category.create({
+      data: {
+        name: name.trim(),
+        slug,
+        parentId: parentId || null,
+        tenantId: user.tenantId,
+      },
+    });
+
+    return NextResponse.json({ success: true, category }, { status: 201 });
+  } catch (error) {
+    console.error("Create category error:", error);
+    return NextResponse.json(
+      { error: "Failed to create category" },
+      { status: 500 }
+    );
+  }
+}
