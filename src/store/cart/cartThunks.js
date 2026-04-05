@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const createSale = createAsyncThunk(
   "cart/createSale",
-  async ({ customerId, globalDiscountValue, globalDiscountType, locationId }, thunkAPI) => {
+  async ({ customerId, globalDiscountValue, globalDiscountType, locationId, approvalRequestId }, thunkAPI) => {
     try {
       const state = thunkAPI.getState();
       const items = state.cart.items;
@@ -16,6 +16,7 @@ export const createSale = createAsyncThunk(
           globalDiscountType,
           locationId,
           items,
+          approvalRequestId,
         }),
       });
 

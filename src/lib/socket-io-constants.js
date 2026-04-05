@@ -24,4 +24,8 @@ export const SOCKET_EVENTS = {
   // Customer events
   CUSTOMER_CREATED: "customer:created",
   CUSTOMER_UPDATED: "customer:updated",
+
+  // Approval events
+  APPROVAL_REQUESTED: "approval:requested",
+  APPROVAL_RESOLVED: "approval:resolved",
 };

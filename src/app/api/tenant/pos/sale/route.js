@@ -232,6 +232,7 @@ export async function POST(req) {
             body.customerId && body.customerId.length > 0
               ? body.customerId
               : null,
+          approvalRequestId: body.approvalRequestId || null,
           items: {
             create: lineItems.map((item) => ({
               productId: item.productId,

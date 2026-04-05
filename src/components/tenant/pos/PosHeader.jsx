@@ -3,7 +3,7 @@ export function PosHeader({ effectiveLocationName, isAllLocations }) {
     <header className="flex-none px-6 py-4 flex items-center justify-between border-b border-white/5 bg-slate-950/80 backdrop-blur-md z-10">
       <div>
         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
-          Nova POS
+          Galaxy Eleven POS
         </h1>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs font-semibold text-sky-400/90 tracking-wide">

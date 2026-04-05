@@ -50,6 +50,8 @@ model Tenant {
   sales             Sale[]
   purchaseOrders    PurchaseOrder[]
   stockMovements    StockMovement[]
+  approvalRequests  ApprovalRequest[]
+  settings          Json?             @default("{}")
 }
 
 model Location {
@@ -70,6 +72,7 @@ model Location {
   sales           Sale[]
   users           User[]
   stockMovements  StockMovement[]
+  approvalRequests ApprovalRequest[]
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
@@ -96,6 +99,8 @@ model User {
   sales                Sale[]           @relation("UserSales")
   stockMovements       StockMovement[]
   purchaseOrders       PurchaseOrder[]
+  requestedApprovals   ApprovalRequest[] @relation("RequestedApprovals")
+  approvedApprovals    ApprovalRequest[] @relation("ApprovedApprovals")
 }
 
 enum UserRole {
@@ -292,6 +297,10 @@ model Sale {
 
   items         SaleItem[]
   payments      Payment[]
+  metadata      Json?
+  
+  approvalRequestId String? @unique
+  approvalRequest   ApprovalRequest? @relation(fields: [approvalRequestId], references: [id])
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -317,6 +326,7 @@ model SaleItem {
   sale        Sale     @relation(fields: [saleId], references: [id])
   product     Product  @relation(fields: [productId], references: [id])
   taxRate     TaxRate? @relation(fields: [taxRateId], references: [id])
+  metadata    Json?
 }
 
 model Payment {
@@ -411,4 +421,35 @@ model StockMovement {
   @@index([locationId])
   @@index([type])
   @@index([createdAt])
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  VOID
+}
+
+model ApprovalRequest {
+  id            String          @id @default(cuid())
+  type          String          // "DISCOUNT", "RETURN", "VOID", etc.
+  status        RequestStatus @default(PENDING)
+  data          Json?           // Generic data storage for the request
+  reason        String?         // The requester's reasoning
+  note          String?         // The resolver's reasoning (rejection/approval note)
+  
+  sale          Sale?           // Reciprocal 1-to-1 relation
+  
+  tenantId      String
+  locationId    String
+  requesterId   String
+  approverId    String?
+
+  tenant        Tenant          @relation(fields: [tenantId], references: [id])
+  location      Location        @relation(fields: [locationId], references: [id])
+  requester     User            @relation("RequestedApprovals", fields: [requesterId], references: [id])
+  approver      User?           @relation("ApprovedApprovals", fields: [approverId], references: [id])
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }

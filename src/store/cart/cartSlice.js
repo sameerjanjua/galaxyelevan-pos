@@ -3,6 +3,9 @@ import { createSale } from "./cartThunks";
 
 const initialState = {
   items: [],
+  customerId: "",
+  globalDiscountValue: 0,
+  globalDiscountType: "PERCENT",
   loading: false,
   error: null,
   lastSale: null,
@@ -23,7 +26,8 @@ const cartSlice = createSlice({
           productId, 
           quantity: 1,
           discountType: "PERCENT",
-          discountValue: 0
+          discountValue: 0,
+          customPrice: null
         });
       }
     },
@@ -33,6 +37,13 @@ const cartSlice = createSlice({
       if (item) {
         if (discountType !== undefined) item.discountType = discountType;
         if (discountValue !== undefined) item.discountValue = discountValue;
+      }
+    },
+    setItemPrice: (state, action) => {
+      const { productId, customPrice } = action.payload;
+      const item = state.items.find((i) => i.productId === productId);
+      if (item) {
+        item.customPrice = customPrice;
       }
     },
     changeQty: (state, action) => {
@@ -45,15 +56,31 @@ const cartSlice = createSlice({
         )
         .filter((item) => item.quantity > 0);
     },
+    setCustomer: (state, action) => {
+      state.customerId = action.payload;
+    },
+    setGlobalDiscount: (state, action) => {
+      const { type, value } = action.payload;
+      if (type !== undefined) state.globalDiscountType = type;
+      if (value !== undefined) state.globalDiscountValue = value;
+    },
+    hydrateCart: (state, action) => {
+      const { items, customerId, globalDiscountValue, globalDiscountType } = action.payload;
+      state.items = items || [];
+      state.customerId = customerId || "";
+      state.globalDiscountValue = globalDiscountValue || 0;
+      state.globalDiscountType = globalDiscountType || "PERCENT";
+    },
     clearCart: (state) => {
       state.items = [];
+      state.customerId = "";
+      state.globalDiscountValue = 0;
+      state.globalDiscountType = "PERCENT";
     },
     updateStockLevels: (state, action) => {
-      // Update stock levels from real-time sync
       state.stockLevels = action.payload;
     },
     updateSingleProductStock: (state, action) => {
-      // Update a single product's stock incrementally (from Socket.io)
       const { productId, quantity } = action.payload;
       if (state.stockLevels[productId]) {
         state.stockLevels[productId] = {
@@ -74,6 +101,9 @@ const cartSlice = createSlice({
         state.loading = false;
         state.error = null;
         state.items = [];
+        state.customerId = "";
+        state.globalDiscountValue = 0;
+        state.globalDiscountType = "PERCENT";
         state.lastSale = action.payload.sale;
       })
       .addCase(createSale.rejected, (state, action) => {
@@ -83,7 +113,17 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addItem, setItemDiscount, changeQty, clearCart, updateStockLevels, updateSingleProductStock } = cartSlice.actions;
+export const { 
+  addItem, 
+  setItemDiscount, 
+  setItemPrice, 
+  changeQty, 
+  clearCart, 
+  setCustomer, 
+  setGlobalDiscount, 
+  hydrateCart,
+  updateStockLevels, 
+  updateSingleProductStock 
+} = cartSlice.actions;
 
 export default cartSlice.reducer;
-

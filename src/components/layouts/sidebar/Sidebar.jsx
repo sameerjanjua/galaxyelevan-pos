@@ -21,6 +21,9 @@ export function Sidebar() {
       items: [
         { href: "/dashboard", label: "Dashboard", icon: "📊" },
         { href: "/pos", label: "POS", icon: "🛒" },
+        ...(user?.role === "OWNER" || user?.role === "MANAGER"
+          ? [{ href: "/approvals", label: "Approvals", icon: "🛡️" }]
+          : []),
       ],
     },
     ...(user?.role === "OWNER" || user?.role === "MANAGER"
